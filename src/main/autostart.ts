@@ -21,11 +21,38 @@ function buildExecLine(): string {
   return `"${execPath}" "${app.getAppPath()}"`
 }
 
+// Windows has a real, built-in equivalent (registered under
+// HKCU\...\Run via the Startup folder), unlike Linux where Electron's
+// setLoginItemSettings isn't implemented at all — so there we still write
+// the freedesktop autostart entry ourselves below.
+function isAutostartEnabledWindows(): boolean {
+  return app.getLoginItemSettings().openAtLogin
+}
+
+function setAutostartWindows(enabled: boolean): { ok: boolean; error?: string } {
+  try {
+    if (app.isPackaged) {
+      app.setLoginItemSettings({ openAtLogin: enabled, path: process.execPath })
+    } else {
+      // Mirrors buildExecLine()'s dev-mode handling below: in dev,
+      // process.execPath is electron.exe itself, so it needs the project
+      // path as an argument, same as running `electron .` would.
+      app.setLoginItemSettings({ openAtLogin: enabled, path: process.execPath, args: [app.getAppPath()] })
+    }
+    return { ok: true }
+  } catch (err) {
+    return { ok: false, error: String(err) }
+  }
+}
+
 export function isAutostartEnabled(): boolean {
+  if (process.platform === 'win32') return isAutostartEnabledWindows()
   return existsSync(autostartFile())
 }
 
 export function setAutostart(enabled: boolean): { ok: boolean; error?: string } {
+  if (process.platform === 'win32') return setAutostartWindows(enabled)
+
   try {
     if (enabled) {
       mkdirSync(autostartDir(), { recursive: true })
