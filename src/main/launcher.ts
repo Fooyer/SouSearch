@@ -39,6 +39,20 @@ function launchShortcut(entry: IndexedApp): void {
   })
 }
 
+function launchUwpApp(appId: string): void {
+  // Packaged apps have no filesystem target to spawn — shell:AppsFolder is
+  // the virtual folder Explorer itself uses to resolve and launch them.
+  spawnDetached('explorer.exe', [`shell:AppsFolder\\${appId}`])
+}
+
+function launchSetting(uri: string): void {
+  // ms-settings: is a registered URI scheme, not a file path, so it needs
+  // openExternal (ShellExecute) rather than openPath.
+  shell.openExternal(uri).catch((err) => {
+    console.error('[launcher] falha ao abrir configuração', uri, err)
+  })
+}
+
 function launchAppImage(filePath: string): void {
   try {
     accessSync(filePath, constants.X_OK)
@@ -68,6 +82,16 @@ export function launchApp(entry: IndexedApp): void {
 
   if (entry.kind === 'shortcut') {
     launchShortcut(entry)
+    return
+  }
+
+  if (entry.kind === 'uwp') {
+    launchUwpApp(entry.exec)
+    return
+  }
+
+  if (entry.kind === 'setting') {
+    launchSetting(entry.exec)
     return
   }
 

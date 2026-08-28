@@ -15,7 +15,7 @@ export interface IndexedApp {
   exec: string
   terminal: boolean
   iconPath?: string
-  kind: 'desktop' | 'appimage' | 'shortcut'
+  kind: 'desktop' | 'appimage' | 'shortcut' | 'uwp' | 'setting'
   path?: string
 }
 
