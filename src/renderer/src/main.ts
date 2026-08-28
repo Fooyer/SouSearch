@@ -22,6 +22,7 @@ const CALC_ID = '__calc__'
 const appEl = document.getElementById('app') as HTMLDivElement
 const queryInput = document.getElementById('query') as HTMLInputElement
 const resultsList = document.getElementById('results') as HTMLUListElement
+const searchLoader = document.getElementById('search-loader') as HTMLDivElement
 const mainBar = document.getElementById('main-bar') as HTMLDivElement
 const settingsBar = document.getElementById('settings-bar') as HTMLDivElement
 const settingsBtn = document.getElementById('settings-btn') as HTMLButtonElement
@@ -50,10 +51,19 @@ let selectedIndex = 0
 let currentResults: SearchResult[] = []
 let debounceHandle: number | undefined
 let inSettings = false
+let lastReportedHeight = -1
 
 function reportSize(): void {
   // rAF so the DOM has settled (icons/text reflow) before we measure.
-  requestAnimationFrame(() => window.launcher.resize(appEl.scrollHeight))
+  requestAnimationFrame(() => {
+    const height = appEl.scrollHeight
+    // A native setSize() round-trip on every keystroke (even when the
+    // height didn't actually change) is what made typing feel like it
+    // stalled — skip it unless the window genuinely needs to resize.
+    if (height === lastReportedHeight) return
+    lastReportedHeight = height
+    window.launcher.resize(height)
+  })
 }
 
 // --- Main search view ---
@@ -116,8 +126,33 @@ function updateSelection(): void {
   el?.scrollIntoView({ block: 'nearest' })
 }
 
+let searchSeq = 0
+let loaderShowHandle: number | undefined
+
 async function search(query: string): Promise<void> {
+  const mySeq = ++searchSeq
+
+  // Typing stays responsive no matter what — this only ever shows a subtle
+  // spinner if a lookup is taking a moment, never blocks the input. The
+  // short delay avoids flashing it for the common case where the answer
+  // comes back almost instantly.
+  if (loaderShowHandle) window.clearTimeout(loaderShowHandle)
+  loaderShowHandle = window.setTimeout(() => {
+    if (mySeq === searchSeq) searchLoader.classList.remove('hidden')
+  }, 120)
+
   const results: SearchResult[] = await window.launcher.search(query)
+
+  // A faster later keystroke may have already resolved — never let a
+  // stale response overwrite newer results (the visible "typing lag").
+  if (mySeq !== searchSeq) return
+
+  if (loaderShowHandle) {
+    window.clearTimeout(loaderShowHandle)
+    loaderShowHandle = undefined
+  }
+  searchLoader.classList.add('hidden')
+
   const calc = tryCalculate(query)
   if (calc.ok && calc.formatted !== undefined) {
     results.unshift({

@@ -84,6 +84,23 @@ body {
   color: var(--muted);
 }
 
+.search-loader {
+  width: 16px;
+  height: 16px;
+  flex-shrink: 0;
+  border-radius: 50%;
+  background: conic-gradient(from 0deg, transparent, var(--accent-solid));
+  -webkit-mask: radial-gradient(farthest-side, transparent calc(100% - 2px), #000 calc(100% - 2px));
+  mask: radial-gradient(farthest-side, transparent calc(100% - 2px), #000 calc(100% - 2px));
+  animation: search-loader-spin 0.7s linear infinite;
+}
+
+@keyframes search-loader-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
 #settings-btn,
 #back-btn {
   background: transparent;
