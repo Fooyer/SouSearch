@@ -1,6 +1,6 @@
 {
   "name": "sousearch",
-  "version": "0.1.1",
+  "version": "0.2.0",
   "desktopName": "sousearch.desktop",
   "description": "Launcher de aplicativos para Linux (Zorin OS), estilo Ulauncher",
   "author": "Fooyer",
@@ -12,11 +12,12 @@
   "private": true,
   "type": "commonjs",
   "scripts": {
-    "dev": "electron-vite dev",
+    "dev": "node scripts/run-electron-vite.js dev",
     "build": "electron-vite build",
     "typecheck": "tsc -p tsconfig.node.json --noEmit && tsc -p tsconfig.web.json --noEmit",
-    "start": "electron-vite preview",
-    "dist": "electron-vite build && electron-builder --linux"
+    "start": "node scripts/run-electron-vite.js preview",
+    "dist": "electron-vite build && electron-builder --linux",
+    "dist:win": "electron-vite build && electron-builder --win"
   },
   "dependencies": {
     "@fontsource/nunito": "^5.3.0",

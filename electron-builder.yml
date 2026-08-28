@@ -31,3 +31,14 @@ deb:
 
 appImage:
   synopsis: Launcher de aplicativos para Linux, estilo Ulauncher
+
+win:
+  target:
+    - nsis
+  icon: build/icon.png
+
+nsis:
+  oneClick: false
+  allowToChangeInstallationDirectory: true
+  createDesktopShortcut: true
+  createStartMenuShortcut: true

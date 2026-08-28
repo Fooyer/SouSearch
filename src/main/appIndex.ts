@@ -5,6 +5,7 @@ import { homedir } from 'os'
 import { parseDesktopFile } from './desktopEntryParser'
 import { resolveIconPath } from './iconResolver'
 import { getSettings } from './settings'
+import { scanWindowsApps, windowsStartMenuDirs } from './windowsAppIndex'
 
 export interface IndexedApp {
   id: string
@@ -14,9 +15,11 @@ export interface IndexedApp {
   exec: string
   terminal: boolean
   iconPath?: string
-  kind: 'desktop' | 'appimage'
+  kind: 'desktop' | 'appimage' | 'shortcut'
   path?: string
 }
+
+const isWindows = process.platform === 'win32'
 
 function xdgDataDirs(): string[] {
   const dataHome = process.env.XDG_DATA_HOME || join(homedir(), '.local/share')
@@ -147,6 +150,13 @@ function persistCache(): void {
 }
 
 export function buildIndex(): IndexedApp[] {
+  if (isWindows) {
+    cachedIndex = scanWindowsApps()
+    dirSignature = computeSignature(windowsStartMenuDirs())
+    persistCache()
+    return cachedIndex
+  }
+
   const { desktopDirs, appImageDirs } = allScanDirs()
   const out: IndexedApp[] = []
 
@@ -163,6 +173,11 @@ export function buildIndex(): IndexedApp[] {
 }
 
 export function loadIndex(): IndexedApp[] {
+  // Scanning Start Menu shortcuts shells out to PowerShell, which is cheap
+  // once at startup but not worth building a separate staleness check for —
+  // always rescan on Windows rather than trusting a persisted signature.
+  if (isWindows) return buildIndex()
+
   const { desktopDirs, appImageDirs } = allScanDirs()
   const signature = computeSignature([...desktopDirs, ...appImageDirs])
   try {
@@ -202,11 +217,18 @@ export function watchAppDirs(onChange: () => void): void {
     }, 500)
   }
 
-  const { desktopDirs, appImageDirs } = allScanDirs()
-  for (const dir of [...desktopDirs, ...appImageDirs]) {
+  const dirsToWatch = isWindows ? windowsStartMenuDirs() : (() => {
+    const { desktopDirs, appImageDirs } = allScanDirs()
+    return [...desktopDirs, ...appImageDirs]
+  })()
+
+  for (const dir of dirsToWatch) {
     if (watchedDirs.has(dir)) continue
     try {
-      watch(dir, { persistent: false }, scheduleRebuild)
+      // Start Menu shortcuts live in nested per-vendor folders, unlike the
+      // flat XDG "applications" dirs, so only Windows needs a recursive watch
+      // (also the only platform besides macOS where Node supports it).
+      watch(dir, { persistent: false, recursive: isWindows }, scheduleRebuild)
       watchedDirs.add(dir)
     } catch {
       // Directory may not support watching (e.g. some overlay/flatpak mounts); ignore.

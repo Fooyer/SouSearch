@@ -1,3 +1,4 @@
+import { shell } from 'electron'
 import { spawn } from 'child_process'
 import { accessSync, chmodSync, constants } from 'fs'
 import { homedir } from 'os'
@@ -26,6 +27,18 @@ function spawnDetached(command: string, args: string[]): void {
   child.unref()
 }
 
+function launchShortcut(entry: IndexedApp): void {
+  if (!entry.path) throw new Error('Atalho sem caminho definido')
+  // shell.openPath resolves the .lnk exactly like Explorer would (target,
+  // arguments, working directory, file-type association, elevation) —
+  // there's no robust way to replicate that by spawning the target ourselves,
+  // since some shortcuts point at non-executables (.msc, .cpl, ...) that only
+  // work through the shell's association lookup.
+  shell.openPath(entry.path).then((err) => {
+    if (err) console.error('[launcher] falha ao abrir atalho', entry.path, err)
+  })
+}
+
 function launchAppImage(filePath: string): void {
   try {
     accessSync(filePath, constants.X_OK)
@@ -50,6 +63,11 @@ export function launchApp(entry: IndexedApp): void {
   if (entry.kind === 'appimage') {
     if (!entry.path) throw new Error('AppImage sem caminho definido')
     launchAppImage(entry.path)
+    return
+  }
+
+  if (entry.kind === 'shortcut') {
+    launchShortcut(entry)
     return
   }
 
