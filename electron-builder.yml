@@ -1,0 +1,33 @@
+appId: com.fooyer.sousearch
+productName: SouSearch
+copyright: Copyright © 2026
+
+directories:
+  output: release
+  buildResources: build
+
+files:
+  - out/**/*
+  - package.json
+
+linux:
+  target:
+    - AppImage
+    - deb
+  category: Utility
+  icon: build/icon.png
+  synopsis: Launcher de aplicativos para Linux, estilo Ulauncher
+  maintainer: Fooyer
+  syncDesktopName: true
+
+deb:
+  depends:
+    - libgtk-3-0
+    - libnotify4
+    - libnss3
+    - libxss1
+    - libxtst6
+    - xdg-utils
+
+appImage:
+  synopsis: Launcher de aplicativos para Linux, estilo Ulauncher
