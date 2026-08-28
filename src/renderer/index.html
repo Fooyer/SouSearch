@@ -1,0 +1,116 @@
+<!doctype html>
+<html lang="pt-BR">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link rel="stylesheet" href="/src/style.css" />
+    <title>Launcher</title>
+  </head>
+  <body>
+    <div id="app">
+      <div class="top-bar" id="main-bar">
+        <input id="query" type="text" autocomplete="off" spellcheck="false" placeholder="Buscar aplicativos..." />
+        <button id="settings-btn" title="Configurações" aria-label="Configurações">⚙</button>
+      </div>
+      <div class="top-bar hidden" id="settings-bar">
+        <button id="back-btn" title="Voltar (Esc)" aria-label="Voltar">←</button>
+        <span class="top-bar-title">Configurações</span>
+      </div>
+
+      <ul id="results"></ul>
+
+      <div id="settings-view" class="hidden">
+        <nav class="settings-nav">
+          <button type="button" class="nav-item active" data-tab="general">Geral</button>
+          <button type="button" class="nav-item" data-tab="theme">Aparência</button>
+          <button type="button" class="nav-item" data-tab="shortcut">Atalho global</button>
+          <button type="button" class="nav-item" data-tab="appimage">AppImage</button>
+        </nav>
+
+        <div class="settings-content">
+          <section class="settings-tab" data-tab-panel="general">
+            <div class="toggle-row">
+              <div class="toggle-text">
+                <div class="toggle-label">Iniciar com o sistema</div>
+                <div class="toggle-desc">Abre o launcher automaticamente ao entrar na sessão.</div>
+              </div>
+              <button type="button" class="switch" id="autostart-switch" role="switch" aria-checked="false"></button>
+            </div>
+            <div class="toggle-row">
+              <div class="toggle-text">
+                <div class="toggle-label">Ícone na bandeja</div>
+                <div class="toggle-desc">Mostra um ícone na bandeja do sistema para abrir ou sair.</div>
+              </div>
+              <button type="button" class="switch" id="tray-switch" role="switch" aria-checked="true"></button>
+            </div>
+            <p id="general-error" class="error"></p>
+            <button id="quit-btn" class="danger-btn">Sair do launcher</button>
+          </section>
+
+          <section class="settings-tab hidden" data-tab-panel="theme">
+            <div class="mode-row">
+              <button type="button" class="mode-btn active" data-theme-mode="solid">Cor sólida</button>
+              <button type="button" class="mode-btn" data-theme-mode="gradient">Gradiente</button>
+            </div>
+            <div class="color-row">
+              <label class="color-field">
+                <span>Cor 1</span>
+                <input type="color" id="theme-color1" value="#5b8def" />
+              </label>
+              <label class="color-field hidden" id="theme-color2-field">
+                <span>Cor 2</span>
+                <input type="color" id="theme-color2" value="#8b5cf6" />
+              </label>
+            </div>
+            <div id="theme-swatches" class="theme-swatches"></div>
+            <div class="theme-preview">
+              <span>Exemplo selecionado</span>
+              <span class="comment-sample">— assim fica o texto</span>
+            </div>
+          </section>
+
+          <section class="settings-tab hidden" data-tab-panel="shortcut">
+            <div class="shortcut-row">
+              <span id="current-shortcut"></span>
+              <button id="record-btn">Gravar</button>
+            </div>
+            <div id="live-keys" class="live-keys hidden"></div>
+            <div class="presets">
+              <button data-preset="Ctrl+Space">Ctrl+Espaço</button>
+              <button data-preset="Super+Space">Super+Espaço</button>
+              <button data-preset="Alt+Space">Alt+Espaço</button>
+              <button data-preset="Super+Alt+Space">Super+Alt+Espaço</button>
+            </div>
+            <p class="hint">
+              Clique em "Gravar" e pressione a combinação (precisa de ao menos um modificador + uma tecla —
+              o sistema não permite usar Super, Ctrl, Alt ou Shift sozinhos diretamente). Se a tecla
+              <strong>Super</strong> não responder, seu sistema provavelmente já usa essa combinação para
+              outra coisa (ex.: o GNOME reserva Super+Espaço para trocar o idioma do teclado por padrão).
+            </p>
+            <button id="open-kb-settings-btn">Abrir atalhos de teclado do sistema</button>
+
+            <div class="tap-divider">ou</div>
+            <div class="tap-row">
+              <div class="toggle-text">
+                <div class="toggle-label">Só a tecla Super (toque único)</div>
+                <div class="toggle-desc">
+                  Usa o utilitário "xcape" para detectar Super pressionado e solto sozinho. Requer instalar
+                  um pacote do sistema.
+                </div>
+              </div>
+              <button data-preset="SuperTap">Usar</button>
+            </div>
+            <p id="settings-error" class="error"></p>
+          </section>
+
+          <section class="settings-tab hidden" data-tab-panel="appimage">
+            <p class="hint">Arquivos .AppImage dentro dessas pastas aparecem na busca, junto com os demais apps.</p>
+            <ul id="appimage-dirs"></ul>
+            <button id="add-dir-btn">+ Adicionar pasta</button>
+          </section>
+        </div>
+      </div>
+    </div>
+    <script type="module" src="/src/main.ts"></script>
+  </body>
+</html>
